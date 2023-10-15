@@ -1,10 +1,13 @@
 package br.com.brunosan.mytodolist.task;
 
+import br.com.brunosan.mytodolist.utils.UtilsCopyProperties;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -44,5 +47,17 @@ public class TaskController {
     public ResponseEntity<List<TaskModel>> listTasksByUserId(HttpServletRequest request) {
         Object userId = request.getAttribute("userId");
         return ResponseEntity.status(HttpStatus.OK).body(this.taskRepository.findAllByUserId((UUID) userId));
+    }
+    
+    @PutMapping("/{id}")
+    public void updateTaskById(@RequestBody TaskModel taskModel,
+                               HttpServletRequest request,
+                               @PathVariable UUID id) {
+        var task = this.taskRepository.findById(id).orElse(null);
+        UtilsCopyProperties.copyNonNullProperties(taskModel, task);
+        
+        taskModel.setId(id);
+        taskModel.setUserId((UUID) request.getAttribute("userId"));
+        this.taskRepository.save(task);
     }
 }
